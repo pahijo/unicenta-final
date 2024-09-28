@@ -1,0 +1,5 @@
+<configuration xmlns="http://java.sun.com/xml/ns/jax-rpc/ri/config">
+	<wsdl 
+		location="src/main/wsdl/wspos-facturatech.wsdl"
+		packageName="com.unicenta.pos.facturateh"/>
+</configuration>

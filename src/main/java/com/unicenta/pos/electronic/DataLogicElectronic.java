@@ -56,58 +56,68 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
         this.s = s;
     }
 
-    public SentenceFind nextFactura(Session s){
-        return new StaticSentence(s, "SELECT CASE  WHEN (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) = 0)  THEN (SELECT coalesce(description,0) FROM unicentaopos.fe_parameters WHERE code = 'DRF _5')  ELSE (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) + 1) END AS NUMFAC FROM unicentaopos.fe_electronic_bill"
-                , null, SerializerReadInteger.INSTANCE);
+    public SentenceFind nextFactura(Session s) {
+        return new StaticSentence(s, "SELECT CASE  WHEN (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) = 0)  THEN (SELECT coalesce(description,0) FROM unicentaopos.fe_parameters WHERE code = 'DRF _5')  ELSE (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) + 1) END AS NUMFAC FROM unicentaopos.fe_electronic_bill",
+                 null, SerializerReadInteger.INSTANCE);
     }
 
     private final PreparedSentence loadNextFactura() throws BasicException {
-      var item   =  new PreparedSentence(s,
+        var item = new PreparedSentence(s,
                 "SELECT CASE  WHEN (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) = 0)  THEN (SELECT coalesce(description,0) FROM unicentaopos.fe_parameters WHERE code = 'DRF _5')  ELSE (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) + 1) END AS NUMFAC FROM unicentaopos.fe_electronic_bill",
                 SerializerWriteString.INSTANCE,
-               (DataRead dr) -> dr.getInt(1));
-        
-     /* var item   = new StaticSentence(s
+                (DataRead dr) -> dr.getInt(1));
+
+        /* var item   = new StaticSentence(s
             , "SELECT CASE  WHEN (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) = 0)  THEN (SELECT coalesce(description,0) FROM unicentaopos.fe_parameters WHERE code = 'DRF _5')  ELSE (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) + 1) END AS NUMFAC FROM unicentaopos.fe_electronic_bill"
             , SerializerWriteString.INSTANCE
             , SerializerReadDate.INSTANCE);*/
         return item;
     }
- 
-    public final void saveTicketBill(final TicketInfo ticket) throws BasicException {
 
+    private final String getXMLFactura(String idBillTicket) throws BasicException {
+        var item = new PreparedSentence(s,
+                "CALL unicentaopos.Sp_CreateBillElectronic(?)",
+                SerializerWriteString.INSTANCE,
+                (DataRead dr) -> dr.getString(1));
+        // Ejecutar la sentencia y obtener el resultado
+        String xmlFactura = (String) item.find(idBillTicket);
+        return xmlFactura;
+    }
+
+    public final String saveTicketBill(final TicketInfo ticket) throws BasicException {
+        ElectronicBill bill = new ElectronicBill(ticket);
         if (ticket.getId() != null) {
             Transaction t;
             t = new Transaction(s) {
                 @Override
                 public Object transact() throws BasicException {
-                    
+
                     //consulta consecutivo 
-                    ElectronicBill bill = new ElectronicBill(ticket);
+                    
                     var value = (Integer) nextFactura(s).find();
                     bill.setNumElectronicBill(value.toString());
+                    bill.setXmlInfo(getXMLFactura(ticket.getId()));
 
-                    
                     //new electronic
-                        new PreparedSentence(s
-                        , "INSERT INTO fe_electronic_bill (ID, status, xmlInfo, numEectronicBill) "
-                        + "VALUES (?, ?, ?, ?)"
-                        , SerializerWriteParams.INSTANCE )
-                        .exec(new DataParams() {
+                    new PreparedSentence(s,
+                             "INSERT INTO fe_electronic_bill (ID, status, xmlInfo, numEectronicBill) "
+                            + "VALUES (?, ?, ?, ?)",
+                             SerializerWriteParams.INSTANCE)
+                            .exec(new DataParams() {
 
-                            @Override
-                            public void writeValues() throws BasicException {
-                                setString(1, bill.getM_sId());
-                                setInt(2, bill.getStatus());
-                                setString(3, bill.getXmlInfo());
-                                setString(4, bill.getNumElectronicBill());
-                            }
-                        });
-                         return null;
+                                @Override
+                                public void writeValues() throws BasicException {
+                                    setString(1, bill.getM_sId());
+                                    setInt(2, bill.getStatus());
+                                    setString(3, bill.getXmlInfo());
+                                    setString(4, bill.getNumElectronicBill());
+                                }
+                            });
+                    return bill.getXmlInfo();
                 }
             };
             t.execute();
         }
+        return bill.getXmlInfo();
     }
 }
-
