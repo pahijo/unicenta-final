@@ -1873,9 +1873,16 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
                                             UpLoad envioUno = new UpLoad();
                                             envioUno.setFileXml64(encodedString);
-
-                                            
                                             respuesta = response.GetUpLoadFile(envioUno);
+                                            /*Guardar información del servio de Facturatech*/
+                                            if(respuesta != null){
+                                                dlElectronicBill.updateTicketBill(ticket.getId(),respuesta.getMessageField(), respuesta.getCodeField());
+                                                if(!(respuesta.getCodeField().contains("200") || respuesta.getCodeField().contains("201"))){
+                                                    log.error("Error en el envío de la factura electronica/ticket:"+ ticket.getTicketId());
+                                                }
+                                                
+                                            }
+                                            
                                         } catch (Exception ex) {
                                             log.error("Error en identación del XML de la factura");
                                         }

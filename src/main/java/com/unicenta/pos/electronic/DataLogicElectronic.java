@@ -58,7 +58,7 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
 
     public SentenceFind nextFactura(Session s) {
         return new StaticSentence(s, "SELECT CASE  WHEN (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) = 0)  THEN (SELECT coalesce(description,0) FROM unicentaopos.fe_parameters WHERE code = 'DRF _5')  ELSE (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) + 1) END AS NUMFAC FROM unicentaopos.fe_electronic_bill",
-                 null, SerializerReadInteger.INSTANCE);
+                null, SerializerReadInteger.INSTANCE);
     }
 
     private final PreparedSentence loadNextFactura() throws BasicException {
@@ -93,16 +93,15 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
                 public Object transact() throws BasicException {
 
                     //consulta consecutivo 
-                    
                     var value = (Integer) nextFactura(s).find();
                     bill.setNumElectronicBill(value.toString());
                     bill.setXmlInfo(getXMLFactura(ticket.getId()));
 
                     //new electronic
                     new PreparedSentence(s,
-                             "INSERT INTO fe_electronic_bill (ID, status, xmlInfo, numEectronicBill) "
+                            "INSERT INTO fe_electronic_bill (ID, status, xmlInfo, numEectronicBill) "
                             + "VALUES (?, ?, ?, ?)",
-                             SerializerWriteParams.INSTANCE)
+                            SerializerWriteParams.INSTANCE)
                             .exec(new DataParams() {
 
                                 @Override
@@ -119,5 +118,30 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
             t.execute();
         }
         return bill.getXmlInfo();
+    }
+
+    public final void updateTicketBill(String ticketId, String response, String codeResponse) throws BasicException {
+        if (ticketId != null) {
+            Transaction t;
+            t = new Transaction(s) {
+                @Override
+                public Object transact() throws BasicException {
+                    //new electronic
+                    new PreparedSentence(s,
+                            "UPDATE fe_electronic_bill SET resFacturaTech = ? , codeFacturaTech = ? WHERE id = ?",
+                            SerializerWriteParams.INSTANCE)
+                            .exec(new DataParams() {
+                                @Override
+                                public void writeValues() throws BasicException {
+                                    setString(1, response);
+                                    setString(2, codeResponse);
+                                    setString(3, ticketId);
+                                }
+                            });
+                    return null;
+                }
+            };
+            t.execute();
+        }
     }
 }
