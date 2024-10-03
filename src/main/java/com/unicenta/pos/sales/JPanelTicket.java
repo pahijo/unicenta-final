@@ -1865,24 +1865,26 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                         //Revisar identación 
                                         try {
                                             String xmlFinal = response.formatXml(xmlBill);
-                                            // Convertir la cadena a un array de bytes
-                                            byte[] originalBytes = xmlFinal.getBytes();
+                                            if (xmlFinal != null) {
+                                                // Convertir la cadena a un array de bytes
+                                                byte[] originalBytes = xmlFinal.getBytes();
 
-                                            // Codificar el array de bytes a una cadena en Base64
-                                            String encodedString = encoder.encodeToString(originalBytes);
+                                                // Codificar el array de bytes a una cadena en Base64
+                                                String encodedString = encoder.encodeToString(originalBytes);
 
-                                            UpLoad envioUno = new UpLoad();
-                                            envioUno.setFileXml64(encodedString);
-                                            respuesta = response.GetUpLoadFile(envioUno);
-                                            /*Guardar información del servio de Facturatech*/
-                                            if(respuesta != null){
-                                                dlElectronicBill.updateTicketBill(ticket.getId(),respuesta.getMessageField(), respuesta.getCodeField());
-                                                if(!(respuesta.getCodeField().contains("200") || respuesta.getCodeField().contains("201"))){
-                                                    log.error("Error en el envío de la factura electronica/ticket:"+ ticket.getTicketId());
+                                                UpLoad envioUno = new UpLoad();
+                                                envioUno.setFileXml64(encodedString);
+                                                respuesta = response.GetUpLoadFile(envioUno);
+                                                /*Guardar información del servio de Facturatech*/
+                                                if (respuesta != null) {
+                                                    dlElectronicBill.updateTicketBill(ticket.getId(),xmlFinal, respuesta.getMessageField(), respuesta.getCodeField());
+                                                    if (!(respuesta.getCodeField().contains("200") || respuesta.getCodeField().contains("201"))) {
+                                                        log.error("Error en el envío de la factura electronica/ticket:" + ticket.getTicketId());
+                                                    }
+
                                                 }
-                                                
                                             }
-                                            
+
                                         } catch (Exception ex) {
                                             log.error("Error en identación del XML de la factura");
                                         }

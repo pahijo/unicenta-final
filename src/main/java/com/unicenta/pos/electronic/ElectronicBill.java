@@ -59,7 +59,7 @@ public final class ElectronicBill implements SerializableRead, Externalizable {
     public ElectronicBill(TicketInfo ticket) {
         this.m_sId = ticket.getId();
         this.status = 1;
-        this.generateXML(ticket);
+        //this.generateXML(ticket);
     }
 
     private void generateXML(TicketInfo ticket) {

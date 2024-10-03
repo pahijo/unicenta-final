@@ -95,7 +95,7 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
                     //consulta consecutivo 
                     var value = (Integer) nextFactura(s).find();
                     bill.setNumElectronicBill(value.toString());
-                    bill.setXmlInfo(getXMLFactura(ticket.getId()));
+                    
 
                     //new electronic
                     new PreparedSentence(s,
@@ -112,6 +112,7 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
                                     setString(4, bill.getNumElectronicBill());
                                 }
                             });
+                    bill.setXmlInfo(getXMLFactura(ticket.getId()));
                     return bill.getXmlInfo();
                 }
             };
@@ -120,7 +121,7 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
         return bill.getXmlInfo();
     }
 
-    public final void updateTicketBill(String ticketId, String response, String codeResponse) throws BasicException {
+    public final void updateTicketBill(String ticketId,String xmlInfo, String response, String codeResponse) throws BasicException {
         if (ticketId != null) {
             Transaction t;
             t = new Transaction(s) {
@@ -128,14 +129,15 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
                 public Object transact() throws BasicException {
                     //new electronic
                     new PreparedSentence(s,
-                            "UPDATE fe_electronic_bill SET resFacturaTech = ? , codeFacturaTech = ? WHERE id = ?",
+                            "UPDATE fe_electronic_bill SET resFacturaTech = ?, xmlInfo =?, codeFacturaTech = ? WHERE id = ?",
                             SerializerWriteParams.INSTANCE)
                             .exec(new DataParams() {
                                 @Override
                                 public void writeValues() throws BasicException {
                                     setString(1, response);
-                                    setString(2, codeResponse);
-                                    setString(3, ticketId);
+                                    setString(2, xmlInfo);
+                                    setString(3, codeResponse);
+                                    setString(4, ticketId);
                                 }
                             });
                     return null;
