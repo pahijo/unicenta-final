@@ -57,7 +57,7 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
     }
 
     public SentenceFind nextFactura(Session s) {
-        return new StaticSentence(s, "SELECT CASE  WHEN (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) = 0)  THEN (SELECT coalesce(description,0) FROM unicentaopos.fe_parameters WHERE code = 'DRF _5')  ELSE (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) + 1) END AS NUMFAC FROM unicentaopos.fe_electronic_bill",
+        return new StaticSentence(s, "SELECT CASE WHEN (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) < (SELECT coalesce(description,0) FROM unicentaopos.fe_parameters WHERE code = 'DRF_5')) THEN (SELECT coalesce(description,0) FROM unicentaopos.fe_parameters WHERE code = 'DRF_5') ELSE (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) + 1) END AS NUMFAC FROM unicentaopos.fe_electronic_bill",
                 null, SerializerReadInteger.INSTANCE);
     }
 

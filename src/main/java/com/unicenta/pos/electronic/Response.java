@@ -62,6 +62,7 @@ public class Response {
       public String formatXml(String xml) throws Exception {
         // Parsear el string XML a un documento XML
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setIgnoringElementContentWhitespace(true);
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document document = builder.parse(new InputSource(new StringReader(xml)));
 

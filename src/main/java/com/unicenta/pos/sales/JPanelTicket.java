@@ -1866,6 +1866,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                         try {
                                             String xmlFinal = response.formatXml(xmlBill);
                                             if (xmlFinal != null) {
+                                                //Remover encabezado
                                                 // Convertir la cadena a un array de bytes
                                                 byte[] originalBytes = xmlFinal.getBytes();
 
