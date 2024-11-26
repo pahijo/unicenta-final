@@ -9,10 +9,11 @@ import com.unicenta.data.loader.DataParams;
 import com.unicenta.data.loader.DataRead;
 import com.unicenta.data.loader.Datas;
 import com.unicenta.data.loader.PreparedSentence;
+import com.unicenta.data.loader.QBFBuilder;
 import com.unicenta.data.loader.SentenceFind;
-import com.unicenta.data.loader.SerializerReadDate;
+import com.unicenta.data.loader.SentenceList;
 import com.unicenta.data.loader.SerializerReadInteger;
-import com.unicenta.data.loader.SerializerReadString;
+import com.unicenta.data.loader.SerializerWriteBasic;
 import com.unicenta.data.loader.SerializerWriteParams;
 import com.unicenta.data.loader.SerializerWriteString;
 import com.unicenta.data.loader.Session;
@@ -24,9 +25,8 @@ import com.unicenta.pos.forms.AppView;
 import com.unicenta.pos.forms.BeanFactoryDataSingle;
 import com.unicenta.pos.ticket.TicketInfo;
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Logger;
+import com.unicenta.pos.electronic.ParameterModel;
 
 /**
  *
@@ -57,7 +57,7 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
     }
 
     public SentenceFind nextFactura(Session s) {
-        return new StaticSentence(s, "SELECT CASE WHEN (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) < (SELECT coalesce(description,0) FROM unicentaopos.fe_parameters WHERE code = 'DRF_5')) THEN (SELECT coalesce(description,0) FROM unicentaopos.fe_parameters WHERE code = 'DRF_5') ELSE (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) + 1) END AS NUMFAC FROM unicentaopos.fe_electronic_bill",
+        return new StaticSentence(s, "SELECT CASE WHEN (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) < (SELECT coalesce(description,0) FROM unicentaopos.fe_parameters WHERE code = 'NumFac')) THEN (SELECT coalesce(description,0) FROM unicentaopos.fe_parameters WHERE code = 'NumFac') ELSE (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) + 1) END AS NUMFAC FROM unicentaopos.fe_electronic_bill",
                 null, SerializerReadInteger.INSTANCE);
     }
 
@@ -66,11 +66,6 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
                 "SELECT CASE  WHEN (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) = 0)  THEN (SELECT coalesce(description,0) FROM unicentaopos.fe_parameters WHERE code = 'DRF _5')  ELSE (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) + 1) END AS NUMFAC FROM unicentaopos.fe_electronic_bill",
                 SerializerWriteString.INSTANCE,
                 (DataRead dr) -> dr.getInt(1));
-
-        /* var item   = new StaticSentence(s
-            , "SELECT CASE  WHEN (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) = 0)  THEN (SELECT coalesce(description,0) FROM unicentaopos.fe_parameters WHERE code = 'DRF _5')  ELSE (coalesce(MAX(CAST(numEectronicBill as unsigned)),0) + 1) END AS NUMFAC FROM unicentaopos.fe_electronic_bill"
-            , SerializerWriteString.INSTANCE
-            , SerializerReadDate.INSTANCE);*/
         return item;
     }
 
@@ -95,7 +90,6 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
                     //consulta consecutivo 
                     var value = (Integer) nextFactura(s).find();
                     bill.setNumElectronicBill(value.toString());
-                    
 
                     //new electronic
                     new PreparedSentence(s,
@@ -121,7 +115,7 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
         return bill.getXmlInfo();
     }
 
-    public final void updateTicketBill(String ticketId,String xmlInfo, String response, String codeResponse) throws BasicException {
+    public final void updateTicketBill(String ticketId, String xmlInfo, String response, String codeResponse, String idTransaction) throws BasicException {
         if (ticketId != null) {
             Transaction t;
             t = new Transaction(s) {
@@ -129,7 +123,7 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
                 public Object transact() throws BasicException {
                     //new electronic
                     new PreparedSentence(s,
-                            "UPDATE fe_electronic_bill SET resFacturaTech = ?, xmlInfo =?, codeFacturaTech = ? WHERE id = ?",
+                            "UPDATE fe_electronic_bill SET resFacturaTech = ?, xmlInfo =?, codeFacturaTech = ?, idTransactionBill = ? WHERE id = ?",
                             SerializerWriteParams.INSTANCE)
                             .exec(new DataParams() {
                                 @Override
@@ -137,7 +131,8 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
                                     setString(1, response);
                                     setString(2, xmlInfo);
                                     setString(3, codeResponse);
-                                    setString(4, ticketId);
+                                    setString(4, idTransaction);
+                                    setString(5, ticketId);
                                 }
                             });
                     return null;
@@ -145,5 +140,73 @@ public class DataLogicElectronic extends BeanFactoryDataSingle {
             };
             t.execute();
         }
+    }
+    
+    public final void updateBillStatus(String ticketId, String codeField, String messageField, String messageErrorField, String documentBase64Field) throws BasicException {
+        if (ticketId != null) {
+            Transaction t;
+            t = new Transaction(s) {
+                @Override
+                public Object transact() throws BasicException {
+                    //new electronic
+                    new PreparedSentence(s,
+                            "UPDATE fe_electronic_bill SET codeStatus = ?, messageStatus =?, messageErrorStatus = ?, documentBase64Field = ? WHERE id = ?",
+                            SerializerWriteParams.INSTANCE)
+                            .exec(new DataParams() {
+                                @Override
+                                public void writeValues() throws BasicException {
+                                    setString(1, codeField);
+                                    setString(2, messageField);
+                                    setString(3, messageErrorField);
+                                    setString(4, documentBase64Field);
+                                    setString(5, ticketId);
+                                }
+                            });
+                    return null;
+                }
+            };
+            t.execute();
+        }
+    }
+
+    public final String getParameterFactura(String codParameter) throws BasicException {
+        return (String) new PreparedSentence(s,
+                "SELECT description FROM unicentaopos.fe_parameters WHERE code= ?",
+                SerializerWriteString.INSTANCE, (DataRead dr) -> {
+                    return dr.getString(1);
+                }).find(codParameter);
+    }
+
+    public final ParameterModel getParameterFacturaModel(String id) throws BasicException {
+        return (ParameterModel) new PreparedSentence(s,
+                "SELECT id,code,description,value,isActive FROM unicentaopos.fe_parameters where id = ?",
+                SerializerWriteString.INSTANCE, (DataRead dr) -> {
+                    ParameterModel param = new ParameterModel(dr.getInt(1));
+                    param.setCode(dr.getString(2));
+                    param.setDescription(dr.getString(3));
+                    param.setValue(dr.getString(4));
+                    param.setIsActive(dr.getInt(5));
+                    return param;
+                }).find(id);
+    }
+
+    public SentenceList getParameterList() {
+        return new StaticSentence(s,
+                 new QBFBuilder("SELECT id,code,description,value,isActive FROM unicentaopos.fe_parameters",
+                         new String[]{"ID", "CODE", "DESCRIPTION", "VALUE", "ISACTIVE"}),
+                 new SerializerWriteBasic(new Datas[]{
+            Datas.OBJECT, Datas.INT,
+            Datas.OBJECT, Datas.STRING,
+            Datas.OBJECT, Datas.STRING,
+            Datas.OBJECT, Datas.STRING,
+            Datas.OBJECT, Datas.INT}),
+                 (DataRead dr) -> {
+                    ParameterModel c = new ParameterModel(dr.getInt(1));
+                    c.setCode(dr.getString(2));
+                    c.setDescription(dr.getString(3));
+                    c.setValue(dr.getString(4));
+                    c.setIsActive(dr.getInt(5));
+                    return c;
+                });
     }
 }

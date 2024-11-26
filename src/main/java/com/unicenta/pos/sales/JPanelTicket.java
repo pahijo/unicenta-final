@@ -36,6 +36,7 @@ import com.unicenta.pos.catalog.JCatalog;
 import com.unicenta.pos.customers.*;
 import com.unicenta.pos.electronic.DataLogicElectronic;
 import com.unicenta.pos.electronic.Response;
+import com.unicenta.pos.electronic.ResponseDocumentBase;
 import com.unicenta.pos.electronic.ResponseWinService;
 import com.unicenta.pos.forms.*;
 import com.unicenta.pos.inventory.ProductStock;
@@ -77,6 +78,7 @@ import java.util.*;
 
 import static java.awt.Window.getWindows;
 import com.unicenta.pos.electronic.UpLoad;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author JG uniCenta
@@ -1865,7 +1867,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                         //Revisar identación 
                                         try {
                                             String xmlFinal = response.formatXml(xmlBill);
-                                            if (xmlFinal != null) {
+                                            String url = dlElectronicBill.getParameterFactura("URL");
+                                            if (xmlFinal != null && url.length() > 0) {
                                                 //Remover encabezado
                                                 // Convertir la cadena a un array de bytes
                                                 byte[] originalBytes = xmlFinal.getBytes();
@@ -1875,14 +1878,39 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
                                                 UpLoad envioUno = new UpLoad();
                                                 envioUno.setFileXml64(encodedString);
-                                                respuesta = response.GetUpLoadFile(envioUno);
+                                                respuesta = response.GetUpLoadFile(envioUno, url);
                                                 /*Guardar información del servio de Facturatech*/
                                                 if (respuesta != null) {
-                                                    dlElectronicBill.updateTicketBill(ticket.getId(),xmlFinal, respuesta.getMessageField(), respuesta.getCodeField());
+                                                    dlElectronicBill.updateTicketBill(ticket.getId(), xmlFinal, respuesta.getMessageField(), respuesta.getCodeField(), respuesta.getTransactionIDField());
                                                     if (!(respuesta.getCodeField().contains("200") || respuesta.getCodeField().contains("201"))) {
                                                         log.error("Error en el envío de la factura electronica/ticket:" + ticket.getTicketId());
                                                     }
+                                                    if (respuesta.getTransactionIDField() != "") {
+                                                        ResponseDocumentBase responseStatusDian = new ResponseDocumentBase();
+                                                        responseStatusDian = response.GetdocumentStatus(respuesta.getTransactionIDField(), url);
+                                                        if (responseStatusDian.getCodeField() != null) {
+                                                            //Si el codigo es 201 hacemos 3 reintentos
+                                                            TimeUnit.SECONDS.sleep(2);
+                                                            int reintentos = 1;
+                                                            String codeEval = responseStatusDian.getCodeField();
+                                                            if (codeEval.equals("200")) {
+                                                                dlElectronicBill.updateBillStatus(ticket.getId(), responseStatusDian.getCodeField(), responseStatusDian.getMessageField(), responseStatusDian.getMessageErrorField(),responseStatusDian.getDocumentBase64Field());
+                                                            }
+                                                            if (codeEval.equals("201")) {
+                                                                while (codeEval.equals("201") && reintentos <= 10) {
+                                                                    reintentos++;
+                                                                    responseStatusDian = response.GetdocumentStatus(respuesta.getTransactionIDField(), url);
+                                                                    dlElectronicBill.updateBillStatus(ticket.getId(), responseStatusDian.getCodeField(), responseStatusDian.getMessageField(), responseStatusDian.getMessageErrorField(),responseStatusDian.getDocumentBase64Field());
+                                                                    codeEval = responseStatusDian.getCodeField();
+                                                                    TimeUnit.SECONDS.sleep(1);
+                                                                }
+                                                            }
+                                                            if (codeEval.equals("201") && codeEval.equals("200")) {
+                                                                dlElectronicBill.updateBillStatus(ticket.getId(), responseStatusDian.getCodeField(), responseStatusDian.getMessageField(), responseStatusDian.getMessageErrorField(),responseStatusDian.getDocumentBase64Field());
+                                                            }
 
+                                                        }
+                                                    }
                                                 }
                                             }
 

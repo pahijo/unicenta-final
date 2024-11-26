@@ -26,16 +26,21 @@ import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import java.io.StringReader;
 import java.io.StringWriter;
+
 /**
  *
  * @author Pablo Porras
  */
 public class Response {
-    
-     public ResponseWinService GetUpLoadFile(UpLoad item) {
+
+    public ResponseWinService GetUpLoadFile(UpLoad item, String url) {
 
         ResponseWinService result = null;
         try {
+            //Consulta el parametro de URL 
+            if (url.length() == 0) {
+                url = "http://localhost:8080";
+            }
             // Convert the instance to a JSON string
             ObjectMapper objectMapper = new ObjectMapper();
             String jsonString = null;
@@ -43,7 +48,7 @@ public class Response {
 
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8080/api/GetUpLoadFile"))
+                    .uri(URI.create(url + "/api/GetUpLoadFile"))
                     .POST(HttpRequest.BodyPublishers.ofString(jsonString))
                     .header("Content-type", "application/json")
                     .build();
@@ -59,7 +64,40 @@ public class Response {
         return result;
     }
     
-      public String formatXml(String xml) throws Exception {
+    public ResponseDocumentBase GetdocumentStatus(String TransacctionID, String url)
+    {
+        ResponseDocumentBase result = null;
+        TransactionDto envio = new TransactionDto();
+        envio.TransacctionID = TransacctionID;
+         try {
+            //Consulta el parametro de URL 
+            if (url.length() == 0) {
+                url = "http://localhost:8080";
+            }
+            // Convert the instance to a JSON string
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonString = null;
+            jsonString = objectMapper.writeValueAsString(envio);
+
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url + "/api/GetdocumentStatus"))
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonString))
+                    .header("Content-type", "application/json")
+                    .build();
+
+            CompletableFuture<HttpResponse<String>> responseFuture = client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
+
+            String responseBody = responseFuture.thenApply(HttpResponse::body).get(5, TimeUnit.SECONDS);
+            result = objectMapper.readValue(responseBody, ResponseDocumentBase.class);
+        } catch (InterruptedException | ExecutionException | TimeoutException | JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    public String formatXml(String xml) throws Exception {
         // Parsear el string XML a un documento XML
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setIgnoringElementContentWhitespace(true);
