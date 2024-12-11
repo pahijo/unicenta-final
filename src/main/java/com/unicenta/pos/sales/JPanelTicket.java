@@ -1855,17 +1855,18 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                 m_config.setProperty("lastticket.type", Integer.toString(ticket.getTicketType()));
                                 m_config.saveWithExistingProperties();
                                 if (cake == JOptionPane.YES_OPTION) {
-                                    //Se inclute la creación de las facturas electronicas
-                                    String xmlBill = dlElectronicBill.saveTicketBill(ticket);
-                                    ResponseWinService respuesta = new ResponseWinService();
-                                    //Consumir servicio de factura tech
-                                    if (xmlBill != "") {
-                                        Response response = new Response();
-                                        //Transformar en base64
-                                        // Obtener un codificador de Base64
-                                        Base64.Encoder encoder = Base64.getEncoder();
-                                        //Revisar identación 
-                                        try {
+                                    try {
+                                        //Se inclute la creación de las facturas electronicas
+                                        String xmlBill = dlElectronicBill.saveTicketBill(ticket);
+                                        ResponseWinService respuesta = new ResponseWinService();
+                                        //Consumir servicio de factura tech
+                                        if (xmlBill != "") {
+                                            Response response = new Response();
+                                            //Transformar en base64
+                                            // Obtener un codificador de Base64
+                                            Base64.Encoder encoder = Base64.getEncoder();
+                                            //Revisar identación 
+
                                             String xmlFinal = response.formatXml(xmlBill);
                                             String url = dlElectronicBill.getParameterFactura("URL");
                                             if (xmlFinal != null && url.length() > 0) {
@@ -1894,33 +1895,33 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                                             int reintentos = 1;
                                                             String codeEval = responseStatusDian.getCodeField();
                                                             if (codeEval.equals("200")) {
-                                                                dlElectronicBill.updateBillStatus(ticket.getId(), responseStatusDian.getCodeField(), responseStatusDian.getMessageField(), responseStatusDian.getMessageErrorField(),responseStatusDian.getDocumentBase64Field());
+                                                                dlElectronicBill.updateBillStatus(ticket.getId(), responseStatusDian.getCodeField(), responseStatusDian.getMessageField(), responseStatusDian.getMessageErrorField(), responseStatusDian.getDocumentBase64Field());
                                                             }
                                                             if (codeEval.equals("201")) {
                                                                 while (codeEval.equals("201") && reintentos <= 10) {
                                                                     reintentos++;
                                                                     responseStatusDian = response.GetdocumentStatus(respuesta.getTransactionIDField(), url);
-                                                                    dlElectronicBill.updateBillStatus(ticket.getId(), responseStatusDian.getCodeField(), responseStatusDian.getMessageField(), responseStatusDian.getMessageErrorField(),responseStatusDian.getDocumentBase64Field());
+                                                                    dlElectronicBill.updateBillStatus(ticket.getId(), responseStatusDian.getCodeField(), responseStatusDian.getMessageField(), responseStatusDian.getMessageErrorField(), responseStatusDian.getDocumentBase64Field());
                                                                     codeEval = responseStatusDian.getCodeField();
                                                                     TimeUnit.SECONDS.sleep(1);
                                                                 }
                                                             }
                                                             if (codeEval.equals("201") && codeEval.equals("200")) {
-                                                                dlElectronicBill.updateBillStatus(ticket.getId(), responseStatusDian.getCodeField(), responseStatusDian.getMessageField(), responseStatusDian.getMessageErrorField(),responseStatusDian.getDocumentBase64Field());
+                                                                dlElectronicBill.updateBillStatus(ticket.getId(), responseStatusDian.getCodeField(), responseStatusDian.getMessageField(), responseStatusDian.getMessageErrorField(), responseStatusDian.getDocumentBase64Field());
                                                             }
 
                                                         }
                                                     }
                                                 }
                                             }
-
-                                        } catch (Exception ex) {
-                                            log.error("Error en identación del XML de la factura");
                                         }
 
-                                    } else {
-                                        log.error("No se genero el XML de la factura");
+                                    } catch (Exception ex) {
+                                        log.error("Error en identación del XML de la factura");
                                     }
+
+                                } else {
+                                    log.error("No se genero el XML de la factura");
                                 }
 
                             } catch (BasicException eData) {
@@ -2228,6 +2229,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             m_ticketlines.setSelectedIndex(i);
         } else if (m_oTicket.getLinesCount() > 0) {
             m_ticketlines.setSelectedIndex(m_oTicket.getLinesCount() - 1);
+
         }
     }
 
@@ -2338,6 +2340,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                     content,
                     "Info",
                     JOptionPane.WARNING_MESSAGE);
+
         }
     }
 
