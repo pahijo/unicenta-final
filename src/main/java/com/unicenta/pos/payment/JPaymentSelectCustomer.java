@@ -68,6 +68,8 @@ public class JPaymentSelectCustomer extends JPaymentSelect {
         addTabPayment(new JPaymentSelect.JPaymentChequeCreator());
         addTabPayment(new JPaymentSelect.JPaymentVoucherCreator());
         addTabPayment(new JPaymentSelect.JPaymentBankCreator());
+        addTabPayment(new JPaymentSelect.JPaymentDaviplataCreator());
+        addTabPayment(new JPaymentSelect.JPaymentNequiCreator());
         addTabPayment(new JPaymentSelect.JPaymentMagcardCreator());
         addTabPayment(new JPaymentSelect.JPaymentSlipCreator());
     }

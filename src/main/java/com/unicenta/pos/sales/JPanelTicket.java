@@ -1903,7 +1903,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                                                     responseStatusDian = response.GetdocumentStatus(respuesta.getTransactionIDField(), url);
                                                                     dlElectronicBill.updateBillStatus(ticket.getId(), responseStatusDian.getCodeField(), responseStatusDian.getMessageField(), responseStatusDian.getMessageErrorField(), responseStatusDian.getDocumentBase64Field());
                                                                     codeEval = responseStatusDian.getCodeField();
-                                                                    TimeUnit.SECONDS.sleep(1);
+                                                                    TimeUnit.SECONDS.sleep(2);
                                                                 }
                                                             }
                                                             if (codeEval.equals("201") && codeEval.equals("200")) {

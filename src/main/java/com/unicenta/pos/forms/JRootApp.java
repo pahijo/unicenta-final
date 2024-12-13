@@ -984,6 +984,7 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
         m_jPanelLogin = new javax.swing.JPanel();
         jPanel4 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
         filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 10), new java.awt.Dimension(32767, 0));
         jPanel5 = new javax.swing.JPanel();
         m_jLogonName = new javax.swing.JPanel();
@@ -1050,6 +1051,17 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
         jLabel1.setMaximumSize(new java.awt.Dimension(800, 1024));
         jLabel1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         jPanel4.add(jLabel1);
+
+        jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel3.setText("Facturación Electrónica V.1");
+        jLabel3.setFocusable(false);
+        jLabel3.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jLabel3.setMaximumSize(new java.awt.Dimension(150, 19));
+        jLabel3.setMinimumSize(new java.awt.Dimension(150, 19));
+        jLabel3.setOpaque(true);
+        jLabel3.setPreferredSize(new java.awt.Dimension(30, 19));
+        jLabel3.setRequestFocusEnabled(false);
+        jPanel4.add(jLabel3);
         jPanel4.add(filler2);
 
         m_jPanelLogin.add(jPanel4, java.awt.BorderLayout.CENTER);
@@ -1178,6 +1190,7 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
     private javax.swing.Box.Filler filler2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;

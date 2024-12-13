@@ -37,6 +37,8 @@
     <class name="com.unicenta.pos.sales.JPanelTicketEdits"/>
     <class name="com.unicenta.pos.sales.JPanelTicketSales"/>
 
+    <class name="payment.daviplata"/>
+    <class name="payment.nequi"/>
     <class name="payment.bank"/>
     <class name="payment.cash"/>
     <class name="payment.cheque"/>

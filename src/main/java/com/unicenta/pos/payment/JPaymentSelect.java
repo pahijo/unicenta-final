@@ -433,6 +433,44 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             return "/com/unicenta/images/bank.png";
         }
     }
+    
+    public class JPaymentNequiCreator implements JPaymentCreator {
+        @Override
+        public JPaymentInterface createJPayment() {
+            return new JPaymentNequi(JPaymentSelect.this);
+        }
+        @Override
+        public String getKey() {
+            return "payment.nequi";
+        }
+        @Override
+        public String getLabelKey() {
+                return "tab.nequi";
+        }
+        @Override
+        public String getIconKey() {
+            return "/com/unicenta/images/nequi.png";
+        }
+    }
+    
+    public class JPaymentDaviplataCreator implements JPaymentCreator {
+        @Override
+        public JPaymentInterface createJPayment() {
+            return new JPaymentDaviplata(JPaymentSelect.this);
+        }
+        @Override
+        public String getKey() {
+            return "payment.daviplata";
+        }
+        @Override
+        public String getLabelKey() {
+            return "tab.daviplata";
+        }
+        @Override
+        public String getIconKey() {
+            return "/com/unicenta/images/daviplata.png";
+        }
+    }
 
     public class JPaymentSlipCreator implements JPaymentCreator {
         @Override
